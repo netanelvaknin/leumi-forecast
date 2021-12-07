@@ -1,0 +1,4 @@
+.env
+/node_modules/
+weather-report.csv
+.DS_Store
