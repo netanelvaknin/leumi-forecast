@@ -21,15 +21,16 @@ const getWeatherForecasts = () => {
     });
 }
 
-const createForecastTable = (forecasts) => {
+const getRelevantWeatherData = (forecasts) => {
+    const relevantWeatherData = [];
+
     if (forecasts.length > 0) {
-        const table = [];
         const relevantInformation = forecasts.map(({ list, city }) => ({ list, city }));
 
         relevantInformation.forEach(({ list, city }) => {
             list.forEach((dailyForecast, index) => {
                 const isRaining = dailyForecast.hasOwnProperty("rain");
-                table.push({
+                relevantWeatherData.push({
                     name: city.name,
                     day: index + 1,
                     temp: Math.floor(dailyForecast.main.temp),
@@ -37,16 +38,16 @@ const createForecastTable = (forecasts) => {
                 });
             });
         });
-
-        return table;
     }
+
+    return relevantWeatherData;
 };
 
 
-const getStatistics = (table) => {
+const getStatistics = (weatherData) => {
     const statistics = [];
     const daysStructure = Array(6).fill([]);
-    table.forEach((daily) => daysStructure[daily.day].push(daily));
+    weatherData.forEach((daily) => daysStructure[daily.day].push(daily));
 
     const citiesWithRain = daysStructure.map(day => day.filter(forecast => forecast.isRaining)).flat();
 
@@ -63,9 +64,9 @@ const getStatistics = (table) => {
     return statistics;
 }
 
-const generateWeatherReport = (table) => {
+const generateWeatherReport = (forecast) => {
     let csv = "";
-    table.forEach((i) => csv += i.join(',') + "\r\n")
+    forecast.forEach((i) => csv += i.join(',') + "\r\n")
 
     fs.writeFile('weather-report.csv', csv, 'utf8', (err) => {
         if (err) throw err;
@@ -74,6 +75,6 @@ const generateWeatherReport = (table) => {
 }
 
 getWeatherForecasts()
-    .then((d) => createForecastTable(d))
-    .then((s) => getStatistics(s))
-    .then((t) => generateWeatherReport(t))
+    .then((forecast) => getRelevantWeatherData(forecast))
+    .then((relevantWeatherData) => getStatistics(relevantWeatherData))
+    .then((statistics) => generateWeatherReport(statistics))
